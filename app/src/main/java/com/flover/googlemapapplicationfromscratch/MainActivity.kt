@@ -2,6 +2,8 @@ package com.flover.googlemapapplicationfromscratch
 
 import android.app.Dialog
 import android.content.pm.PackageManager
+import android.graphics.Color
+import android.location.Location
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
@@ -9,9 +11,16 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.CircleOptions
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.tasks.Task
+import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback{
 
@@ -19,18 +28,22 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback{
     private var mLocationPermissionsGranted : Boolean = false
     private val locationPermissionRequestCode = 74
 
-    private var mMap : GoogleMap? = null
+    // These variables will be initialized later
+    private lateinit var mFusedLocationProviderClient : FusedLocationProviderClient
+    private lateinit var mMap : GoogleMap
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        // Checking google map can be viewed or not
         if (isServiceOk()){
+            // Getting all permissions manually
             getLocationPermission()
         }
     }
 
     private fun isServiceOk() : Boolean{
-        var available = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this);
+        var available = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this)
         return when {
             available==ConnectionResult.SUCCESS -> {
                 true
@@ -48,30 +61,44 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback{
     }
 
     private fun getLocationPermission(){
+        // Creating the array of permissions we need
         // https://stackoverflow.com/questions/31366229/how-to-initialize-an-array-in-kotlin-with-values/31366287
         var permission : Array<String> = arrayOf(
             android.Manifest.permission.ACCESS_FINE_LOCATION,
             android.Manifest.permission.ACCESS_COARSE_LOCATION
         )
 
+        // Looping through the permissions to check everything
+        // was ok
         permission.forEach {
             mLocationPermissionsGranted =
                 ContextCompat.checkSelfPermission(this.applicationContext, it)==PackageManager.PERMISSION_GRANTED
         }
 
+        // If we need permission popup the dialog box to get permission
         if (!mLocationPermissionsGranted){
-            ActivityCompat.requestPermissions(this, permission, 74)
+            // The last parameter is a request code that can be any
+            return ActivityCompat.requestPermissions(this, permission, 74)
         }
+        return initMap()
     }
 
+    // This will execute after the request dialog got user input
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
         grantResults: IntArray
     ) {
+        // We assuming the we didn't get permission yet
         mLocationPermissionsGranted = false
+        // We are checking with our previous request code's result
+        // and perform certain action according to the user input
         when(requestCode){
+            // We are checking the location permission's results
             locationPermissionRequestCode -> {
+                // If the results are > 0 and everything was granted
+                // we set mLocationPermissionsGranted to true other wise false
+
                 if (grantResults.isNotEmpty()){
                     grantResults.forEach {
                         mLocationPermissionsGranted =
@@ -85,14 +112,56 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback{
         }
     }
 
+    // It will get the map asynchronously
     private fun initMap(){
         var mapFragment : SupportMapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
+        // This will initialize the asynchronous task
         mapFragment.getMapAsync(this)
     }
 
+    // Will execute when the map is ready and assign the map into
+    // mMap variable
     override fun onMapReady(p0: GoogleMap?) {
-        mMap = p0
+        // https://stackoverflow.com/questions/34342413/what-is-the-kotlin-double-bang-operator
+        // !! will throw NullPointer exception it p0 is null
+        mMap = p0!!
+
+        if (mLocationPermissionsGranted){
+            getDeviceLocation()
+
+            // Setting the blue dot at device location
+            mMap.isMyLocationEnabled = true
+        }
     }
 
+    private lateinit var latLng : LatLng
+    // Getting the current location of the device
+    private fun getDeviceLocation(){
+        mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
 
+        try {
+            if (mLocationPermissionsGranted){
+                var location : Task<Location> = mFusedLocationProviderClient.lastLocation
+                location.addOnCompleteListener { task ->
+                    if (task.isSuccessful){
+                        task.addOnSuccessListener { location ->
+                            latLng = LatLng(location.latitude, location.longitude)
+                            moveCamera(latLng, 15f)
+
+                            // Added a red zone :) with circle option
+                            mMap.addCircle(CircleOptions().center(latLng).radius(300.048)
+                                .fillColor(Color.parseColor("#EC7063"))
+                                .strokeWidth(1f).strokeColor(Color.parseColor("#85C1E9")))
+                        }
+                    }
+                }
+            }
+        }catch (e : SecurityException){
+
+        }
+    }
+
+    private fun moveCamera(latLng : LatLng, zoom : Float){
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom))
+    }
 }
