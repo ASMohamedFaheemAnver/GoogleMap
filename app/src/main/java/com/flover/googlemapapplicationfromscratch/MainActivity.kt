@@ -2,11 +2,10 @@ package com.flover.googlemapapplicationfromscratch
 
 import android.app.Dialog
 import android.content.pm.PackageManager
-import android.graphics.Color
 import android.location.Location
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.gms.common.ConnectionResult
@@ -17,10 +16,8 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.CircleOptions
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.tasks.Task
-import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback{
 
@@ -131,6 +128,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback{
 
             // Setting the blue dot at device location
             mMap.isMyLocationEnabled = true
+            mMap.uiSettings.isMyLocationButtonEnabled = false
         }
     }
 
@@ -149,9 +147,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback{
                             moveCamera(latLng, 15f)
 
                             // Added a red zone :) with circle option
-                            mMap.addCircle(CircleOptions().center(latLng).radius(300.048)
+                            /*mMap.addCircle(CircleOptions().center(latLng).radius(300.048)
                                 .fillColor(Color.parseColor("#EC7063"))
-                                .strokeWidth(1f).strokeColor(Color.parseColor("#85C1E9")))
+                                .strokeWidth(1f).strokeColor(Color.parseColor("#85C1E9")))*/
                         }
                     }
                 }
