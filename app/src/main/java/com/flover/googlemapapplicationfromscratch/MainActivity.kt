@@ -4,6 +4,10 @@ import android.app.Dialog
 import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Bundle
+import android.view.KeyEvent
+import android.view.inputmethod.EditorInfo
+import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -21,6 +25,10 @@ import com.google.android.gms.tasks.Task
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback{
 
+    //Widgets
+    private lateinit var mSearchText : EditText
+
+    // Variables
     private val errorDialogRequest: Int = 9001
     private var mLocationPermissionsGranted : Boolean = false
     private val locationPermissionRequestCode = 74
@@ -32,6 +40,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback{
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        // Initializing widget
+        mSearchText = findViewById(R.id.search_input)
+
         // Checking google map can be viewed or not
         if (isServiceOk()){
             // Getting all permissions manually
@@ -161,5 +173,22 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback{
 
     private fun moveCamera(latLng : LatLng, zoom : Float){
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom))
+    }
+
+    private fun initSearch(){
+        /*var lambda : (TextView, Int, KeyEvent) -> Boolean = {textView, actionId, keyEvent ->
+            doSomething()
+        }*/
+
+        // https://stackoverflow.com/questions/37201504/how-to-setoneditoractionlistener-with-kotlin
+        mSearchText.setOnEditorActionListener { v, actionId, event ->
+            if (actionId in intArrayOf(EditorInfo.IME_ACTION_SEARCH,
+                    EditorInfo.IME_ACTION_DONE) || event.action in intArrayOf(
+                    KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER
+                )){
+                // Execute geo search here
+            }
+            false
+        }
     }
 }

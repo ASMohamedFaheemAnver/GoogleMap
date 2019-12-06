@@ -27,9 +27,10 @@
             android:id="@+id/search_input"
             android:textSize="15dp"
             android:layout_toEndOf="@+id/ic_magnify"
-            android:singleLine="true"
             android:background="@null"
-            android:hint="ENTER YOUR DESTINATION!"/>
+            android:singleLine="true"
+            android:hint="ENTER YOUR DESTINATION!"
+            android:imeOptions="actionSearch"/>
 
     </RelativeLayout>
 
