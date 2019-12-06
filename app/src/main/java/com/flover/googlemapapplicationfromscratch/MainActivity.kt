@@ -2,8 +2,11 @@ package com.flover.googlemapapplicationfromscratch
 
 import android.app.Dialog
 import android.content.pm.PackageManager
+import android.location.Address
+import android.location.Geocoder
 import android.location.Location
 import android.os.Bundle
+import android.util.Log
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
@@ -22,6 +25,7 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.tasks.Task
+import java.io.IOException
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback{
 
@@ -48,6 +52,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback{
         if (isServiceOk()){
             // Getting all permissions manually
             getLocationPermission()
+            initSearch()
         }
     }
 
@@ -187,8 +192,25 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback{
                     KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER
                 )){
                 // Execute geo search here
+                geoLocate()
             }
             false
+        }
+    }
+
+    private fun geoLocate(){
+        var searchString : String = mSearchText.text.toString()
+        var geoCorder = Geocoder(this)
+        var list : List<Address> = ArrayList()
+        try {
+            list = geoCorder.getFromLocationName(searchString, 1)
+        }catch (e : IOException){
+
+        }
+        if (list.isNotEmpty()){
+            var address : Address = list[0]
+            Log.i("On Search!", address.toString())
+            // println(address.toString())
         }
     }
 }

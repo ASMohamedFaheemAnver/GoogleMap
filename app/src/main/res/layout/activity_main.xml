@@ -14,8 +14,8 @@
         android:id="@+id/search_bar">
 
         <ImageView
-            android:layout_width="30dp"
-            android:layout_height="30dp"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
             android:id="@+id/ic_magnify"
             android:layout_centerVertical="true"
             android:src="@drawable/ic_magnify"
@@ -27,6 +27,7 @@
             android:id="@+id/search_input"
             android:textSize="15dp"
             android:layout_toEndOf="@+id/ic_magnify"
+            android:layout_marginLeft="20dp"
             android:background="@null"
             android:singleLine="true"
             android:hint="ENTER YOUR DESTINATION!"
