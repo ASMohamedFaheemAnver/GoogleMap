@@ -33,6 +33,15 @@
             android:hint="ENTER YOUR DESTINATION!"
             android:imeOptions="actionSearch"/>
 
+        <ImageView
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:id="@+id/ic_done"
+            android:layout_centerVertical="true"
+            android:src="@drawable/ic_done"
+            android:layout_alignParentEnd="true"
+            android:layout_marginRight="10dp"/>
+
     </RelativeLayout>
 
     <fragment xmlns:android="http://schemas.android.com/apk/res/android"

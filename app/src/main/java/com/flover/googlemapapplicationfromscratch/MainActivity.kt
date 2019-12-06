@@ -1,6 +1,7 @@
 package com.flover.googlemapapplicationfromscratch
 
 import android.app.Dialog
+import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Address
 import android.location.Geocoder
@@ -9,8 +10,9 @@ import android.os.Bundle
 import android.util.Log
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
-import android.widget.TextView
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -24,6 +26,7 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.tasks.Task
 import java.io.IOException
 
@@ -36,6 +39,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback{
     private val errorDialogRequest: Int = 9001
     private var mLocationPermissionsGranted : Boolean = false
     private val locationPermissionRequestCode = 74
+
+    private val defaultZoom : Float = 12f
 
     // These variables will be initialized later
     private lateinit var mFusedLocationProviderClient : FusedLocationProviderClient
@@ -53,6 +58,18 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback{
             // Getting all permissions manually
             getLocationPermission()
             initSearch()
+            // If all service are ok, we are listening to search button click
+            findViewById<ImageView>(R.id.ic_done).setOnClickListener {
+                geoLocate()
+
+                // https://stackoverflow.com/questions/1109022/close-hide-the-android-soft-keyboard
+                // When search done button clicked, input keyboard will be hidden
+                val view = this.currentFocus
+                view?.let {
+                    val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+                    imm?.hideSoftInputFromWindow(view.windowToken, 0)
+                }
+            }
         }
     }
 
@@ -161,7 +178,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback{
                     if (task.isSuccessful){
                         task.addOnSuccessListener { location ->
                             latLng = LatLng(location.latitude, location.longitude)
-                            moveCamera(latLng, 15f)
+                            moveCamera(latLng, defaultZoom)
 
                             // Added a red zone :) with circle option
                             /*mMap.addCircle(CircleOptions().center(latLng).radius(300.048)
@@ -186,7 +203,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback{
         }*/
 
         // https://stackoverflow.com/questions/37201504/how-to-setoneditoractionlistener-with-kotlin
-        mSearchText.setOnEditorActionListener { v, actionId, event ->
+        mSearchText.setOnEditorActionListener { _, actionId, event ->
             if (actionId in intArrayOf(EditorInfo.IME_ACTION_SEARCH,
                     EditorInfo.IME_ACTION_DONE) || event.action in intArrayOf(
                     KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER
@@ -200,17 +217,22 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback{
 
     private fun geoLocate(){
         var searchString : String = mSearchText.text.toString()
-        var geoCorder = Geocoder(this)
+        var geoCoder = Geocoder(this)
         var list : List<Address> = ArrayList()
         try {
-            list = geoCorder.getFromLocationName(searchString, 1)
+            list = geoCoder.getFromLocationName(searchString, 1)
         }catch (e : IOException){
 
         }
         if (list.isNotEmpty()){
             var address : Address = list[0]
-            Log.i("On Search!", address.toString())
+            Log.i("ON_SUCCESS_ADDRESS", address.toString())
             // println(address.toString())
+            var latLng = LatLng(address.latitude, address.longitude)
+            moveCamera(latLng, defaultZoom)
+            var options : MarkerOptions = MarkerOptions().position(latLng)
+            mMap.addMarker(options)
+            // Toast.makeText(this, address.toString(), Toast.LENGTH_LONG).show()
         }
     }
 }
