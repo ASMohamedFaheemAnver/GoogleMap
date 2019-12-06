@@ -64,12 +64,21 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback{
 
                 // https://stackoverflow.com/questions/1109022/close-hide-the-android-soft-keyboard
                 // When search done button clicked, input keyboard will be hidden
-                val view = this.currentFocus
-                view?.let {
-                    val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
-                    imm?.hideSoftInputFromWindow(view.windowToken, 0)
-                }
+                hideKeyBord()
             }
+
+            findViewById<ImageView>(R.id.position).setOnClickListener {
+                getDeviceLocation()
+                hideKeyBord()
+            }
+        }
+    }
+
+    private fun hideKeyBord(){
+        val view = this.currentFocus
+        view?.let {
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+            imm?.hideSoftInputFromWindow(view.windowToken, 0)
         }
     }
 
