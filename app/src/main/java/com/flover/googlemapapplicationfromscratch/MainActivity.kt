@@ -186,8 +186,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback{
                 location.addOnCompleteListener { task ->
                     if (task.isSuccessful){
                         task.addOnSuccessListener { location ->
-                            latLng = LatLng(location.latitude, location.longitude)
-                            moveCamera(latLng, defaultZoom)
+                            try {
+                                latLng = LatLng(location.latitude, location.longitude)
+                                moveCamera(latLng, defaultZoom)
+                            }catch (e : IllegalStateException){
+                                Toast.makeText(this, "YOU HAVE REACHED MAX PLACE API REQUEST!", Toast.LENGTH_LONG).show()
+                            }
 
                             // Added a red zone :) with circle option
                             /*mMap.addCircle(CircleOptions().center(latLng).radius(300.048)
