@@ -1,5 +1,6 @@
 package com.flover.googlemapapplicationfromscratch
 
+import android.Manifest
 import android.app.Dialog
 import android.content.Context
 import android.content.pm.PackageManager
@@ -30,21 +31,21 @@ import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.tasks.Task
 import java.io.IOException
 
-class MainActivity : AppCompatActivity(), OnMapReadyCallback{
+class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
     //Widgets
-    private lateinit var mSearchText : EditText
+    private lateinit var mSearchText: EditText
 
     // Variables
     private val errorDialogRequest: Int = 9001
-    private var mLocationPermissionsGranted : Boolean = false
+    private var mLocationPermissionsGranted: Boolean = false
     private val locationPermissionRequestCode = 74
 
-    private val defaultZoom : Float = 12f
+    private val defaultZoom: Float = 12f
 
     // These variables will be initialized later
-    private lateinit var mFusedLocationProviderClient : FusedLocationProviderClient
-    private lateinit var mMap : GoogleMap
+    private lateinit var mFusedLocationProviderClient: FusedLocationProviderClient
+    private lateinit var mMap: GoogleMap
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,7 +55,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback{
         mSearchText = findViewById(R.id.search_input)
 
         // Checking google map can be viewed or not
-        if (isServiceOk()){
+        if (isServiceOk()) {
             // Getting all permissions manually
             getLocationPermission()
             initSearch()
@@ -74,7 +75,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback{
         }
     }
 
-    private fun hideKeyBord(){
+    private fun hideKeyBord() {
         val view = this.currentFocus
         view?.let {
             val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
@@ -82,14 +83,15 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback{
         }
     }
 
-    private fun isServiceOk() : Boolean{
+    private fun isServiceOk(): Boolean {
         var available = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this)
         return when {
-            available==ConnectionResult.SUCCESS -> {
+            available == ConnectionResult.SUCCESS -> {
                 true
             }
             GoogleApiAvailability.getInstance().isUserResolvableError(available) -> {
-                var dialog : Dialog = GoogleApiAvailability.getInstance().getErrorDialog(this, available, errorDialogRequest)
+                var dialog: Dialog = GoogleApiAvailability.getInstance()
+                    .getErrorDialog(this, available, errorDialogRequest)
                 dialog.show()
                 true
             }
@@ -100,10 +102,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback{
         }
     }
 
-    private fun getLocationPermission(){
+    private fun getLocationPermission() {
         // Creating the array of permissions we need
         // https://stackoverflow.com/questions/31366229/how-to-initialize-an-array-in-kotlin-with-values/31366287
-        var permission : Array<String> = arrayOf(
+        var permission: Array<String> = arrayOf(
             android.Manifest.permission.ACCESS_FINE_LOCATION,
             android.Manifest.permission.ACCESS_COARSE_LOCATION
         )
@@ -112,11 +114,14 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback{
         // was ok
         permission.forEach {
             mLocationPermissionsGranted =
-                ContextCompat.checkSelfPermission(this.applicationContext, it)==PackageManager.PERMISSION_GRANTED
+                ContextCompat.checkSelfPermission(
+                    this.applicationContext,
+                    it
+                ) == PackageManager.PERMISSION_GRANTED
         }
 
         // If we need permission popup the dialog box to get permission
-        if (!mLocationPermissionsGranted){
+        if (!mLocationPermissionsGranted) {
             // The last parameter is a request code that can be any
             return ActivityCompat.requestPermissions(this, permission, 74)
         }
@@ -133,18 +138,18 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback{
         mLocationPermissionsGranted = false
         // We are checking with our previous request code's result
         // and perform certain action according to the user input
-        when(requestCode){
+        when (requestCode) {
             // We are checking the location permission's results
             locationPermissionRequestCode -> {
                 // If the results are > 0 and everything was granted
                 // we set mLocationPermissionsGranted to true other wise false
 
-                if (grantResults.isNotEmpty()){
+                if (grantResults.isNotEmpty()) {
                     grantResults.forEach {
                         mLocationPermissionsGranted =
                             it == PackageManager.PERMISSION_GRANTED
                     }
-                    if (mLocationPermissionsGranted){
+                    if (mLocationPermissionsGranted) {
                         initMap()
                     }
                 }
@@ -153,8 +158,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback{
     }
 
     // It will get the map asynchronously
-    private fun initMap(){
-        var mapFragment : SupportMapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
+    private fun initMap() {
+        var mapFragment: SupportMapFragment =
+            supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         // This will initialize the asynchronous task
         mapFragment.getMapAsync(this)
     }
@@ -166,31 +172,45 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback{
         // !! will throw NullPointer exception it p0 is null
         mMap = p0!!
 
-        if (mLocationPermissionsGranted){
-            getDeviceLocation()
+        // if (mLocationPermissionsGranted){
+        getDeviceLocation()
 
-            // Setting the blue dot at device location
+        // Setting the blue dot at device location
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
             mMap.isMyLocationEnabled = true
             mMap.uiSettings.isMyLocationButtonEnabled = false
         }
+        //}
     }
 
-    private lateinit var latLng : LatLng
+    private lateinit var latLng: LatLng
+
     // Getting the current location of the device
-    private fun getDeviceLocation(){
+    private fun getDeviceLocation() {
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
 
         try {
-            if (mLocationPermissionsGranted){
-                var location : Task<Location> = mFusedLocationProviderClient.lastLocation
+            if (mLocationPermissionsGranted) {
+                var location: Task<Location> = mFusedLocationProviderClient.lastLocation
                 location.addOnCompleteListener { task ->
-                    if (task.isSuccessful){
+                    if (task.isSuccessful) {
                         task.addOnSuccessListener { location ->
                             try {
                                 latLng = LatLng(location.latitude, location.longitude)
                                 moveCamera(latLng, defaultZoom)
-                            }catch (e : IllegalStateException){
-                                Toast.makeText(this, "YOU HAVE REACHED MAX PLACE API REQUEST!", Toast.LENGTH_LONG).show()
+                            } catch (e: IllegalStateException) {
+                                Toast.makeText(
+                                    this,
+                                    "YOU HAVE REACHED MAX PLACE API REQUEST!",
+                                    Toast.LENGTH_LONG
+                                ).show()
                             }
 
                             // Added a red zone :) with circle option
@@ -201,26 +221,29 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback{
                     }
                 }
             }
-        }catch (e : SecurityException){
+        } catch (e: SecurityException) {
 
         }
     }
 
-    private fun moveCamera(latLng : LatLng, zoom : Float){
+    private fun moveCamera(latLng: LatLng, zoom: Float) {
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom))
     }
 
-    private fun initSearch(){
+    private fun initSearch() {
         /*var lambda : (TextView, Int, KeyEvent) -> Boolean = {textView, actionId, keyEvent ->
             doSomething()
         }*/
 
         // https://stackoverflow.com/questions/37201504/how-to-setoneditoractionlistener-with-kotlin
         mSearchText.setOnEditorActionListener { _, actionId, event ->
-            if (actionId in intArrayOf(EditorInfo.IME_ACTION_SEARCH,
-                    EditorInfo.IME_ACTION_DONE) || event.action in intArrayOf(
+            if (actionId in intArrayOf(
+                    EditorInfo.IME_ACTION_SEARCH,
+                    EditorInfo.IME_ACTION_DONE
+                ) || event.action in intArrayOf(
                     KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER
-                )){
+                )
+            ) {
                 // Execute geo search here
                 geoLocate()
             }
@@ -228,22 +251,22 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback{
         }
     }
 
-    private fun geoLocate(){
-        var searchString : String = mSearchText.text.toString()
+    private fun geoLocate() {
+        var searchString: String = mSearchText.text.toString()
         var geoCoder = Geocoder(this)
-        var list : List<Address> = ArrayList()
+        var list: List<Address> = ArrayList()
         try {
             list = geoCoder.getFromLocationName(searchString, 1)
-        }catch (e : IOException){
+        } catch (e: IOException) {
 
         }
-        if (list.isNotEmpty()){
-            var address : Address = list[0]
+        if (list.isNotEmpty()) {
+            var address: Address = list[0]
             Log.i("ON_SUCCESS_ADDRESS", address.toString())
             // println(address.toString())
             var latLng = LatLng(address.latitude, address.longitude)
             moveCamera(latLng, defaultZoom)
-            var options : MarkerOptions = MarkerOptions().position(latLng)
+            var options: MarkerOptions = MarkerOptions().position(latLng)
             mMap.addMarker(options)
             // Toast.makeText(this, address.toString(), Toast.LENGTH_LONG).show()
         }
